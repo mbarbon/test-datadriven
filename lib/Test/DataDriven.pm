@@ -75,7 +75,7 @@ use Fatal qw(open close);
 
 our $VERSION = '0.02';
 
-my( @plugins, %tags, @tags_re, $stop_run );
+my( %tags, @tags_re, $stop_run );
 
 =head1 METHODS
 
@@ -96,7 +96,6 @@ sub register {
     my( $class, %args ) = @_;
     my( $plugin, $tag, $tag_re ) = @args{qw(plugin tag tag_re)};
 
-    push @plugins, $plugin;
     push @{$tags{$tag}}, $plugin if $tag;
     push @tags_re, [ $tag_re, $plugin ] if $tag_re;
 }
