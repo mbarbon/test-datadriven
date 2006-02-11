@@ -174,6 +174,16 @@ sub run {
     close $create_fh if $create_fh;
 }
 
+=head2 stop_run
+
+    Test::DataDriven->stop_run;
+
+Stop the tests being run.
+
+=cut
+
+sub stop_run { $stop_run = 1 }
+
 =head1 BUGS
 
 Needs more documentation and examples.
