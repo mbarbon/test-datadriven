@@ -73,7 +73,7 @@ use warnings;
 use Test::Base -base, '!run';
 use Fatal qw(open close);
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 my( @plugins, %tags, @tags_re, $stop_run );
 
@@ -114,7 +114,7 @@ sub _plugins_for {
     my( $class, $tag ) = @_;
     my @plugins =
       ( ( exists $tags{$tag} ? @{$tags{$tag}} : () ),
-        ( map { my( $re, $plugin ) = $_->[0];
+        ( map { my( $re, $plugin ) = @$_;
                 $tag =~ /$re/ ? ( $plugin ) : () }
               @tags_re ) );
 

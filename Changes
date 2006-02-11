@@ -1,4 +1,7 @@
 Revision history for Perl module Test::DataDriven.
 
+0.02
+    - Fixed registering plugins by regular expression.
+
 0.01  Thu Feb 09 21:38:44 CET 2006
     - First public release.
