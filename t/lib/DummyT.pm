@@ -47,7 +47,7 @@ sub _lsd {
 
     delete $final{$_} foreach @orig;
 
-    my @final = map { s{^$directory/}//; $_ } keys %final;
+    my @final = sort map { s{^$directory/}//; $_ } keys %final;
 }
 
 sub post_created : End(created) {
