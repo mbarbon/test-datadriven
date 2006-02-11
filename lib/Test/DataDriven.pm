@@ -12,12 +12,12 @@ In the test module:
     package MyTest;
 
     use Test::DataDriven::Plugin -base;
-    __PACKAGE__->register( 'Test::DataDriven' );
+    __PACKAGE__->register;
 
     my $time;
     my $result;
 
-    sub check_first : Begin(add1) {
+    sub check_before : Begin(add1) {
         my( $block, $section_name, @data ) = @_;
         $time = time();
     }
@@ -27,7 +27,7 @@ In the test module:
         $result = add_1( $data[0] );
     }
 
-    sub check_it_up : End(result) {
+    sub check_after : End(result) {
         my( $block, $section_name, @data ) = @_;
         is( $result, $data[0] );
         ok( time() - $time < 1 ); # check side effects
@@ -57,13 +57,16 @@ In the test file:
 =head1 DESCRIPTION
 
 C<Test::Base> is great for writing data driven tests, but sometimes you
-need to test things that cannot easily be expressed using the
+need to test things that cannot be easily expressed using the
 filter-and-compare-output approach.
 
 C<Test::DataDriven> builds upon C<Test::Base> adding the ability to
 declare actions to be run for each section of each test block. In
 particular, the processing of each block is divided in three phases:
-"begin", "run" and "end".
+"begin", "run" and "end". The "begin" phase can be used to assess
+or establish the preconditions for the test. The "run" phase is used
+to perform some actions. The "end" phase can be used to check the side
+effects of the "run" phase.
 
 =cut
 
@@ -82,13 +85,21 @@ my( %tags, @tags_re, $stop_run );
 =head2 register
 
     Test::DataDriven->register
-      ( plugin   => $plugin
-        tag      => 'section_name'
-        tag_re   => qr/match/ );
+      ( plugin   => $plugin,
+        tag      => 'section_name',
+        );
+
+    Test::DataDriven->register
+      ( plugin   => $plugin,
+        tag_re   => qr/match/,
+        );
 
 Registers a plugin whose C<begin>, C<run> and C<end> methods will be
 called for each section whose name equals the one specified with 'tag'
-or matches the regular expression specified with 'tag_re'.
+or matches the regular expression specified with 'tag_re'. At least one
+of 'tag' or 'tag_re' must be present.
+
+C<$plugin> can be either a class or object reference.
 
 =cut
 

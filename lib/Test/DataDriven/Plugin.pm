@@ -21,6 +21,10 @@ our @EXPORT = qw(test_name);
 my %attributes;
 my %dispatch;
 
+=head1 METHODS
+
+=cut
+
 sub MODIFY_CODE_ATTRIBUTES {
     my( $class, $code, @attrs ) = @_;
     my( @known, @unknown );
@@ -35,9 +39,13 @@ sub MODIFY_CODE_ATTRIBUTES {
     return @unknown;
 }
 
+=pod
+
 sub FETCH_CODE_ATTRIBUTES {
     return @{$attributes{ref( $_[0] ) || $_[0]}{$_[1]}[1] || []};
 }
+
+=cut
 
 our $test_name;
 
@@ -46,11 +54,21 @@ sub test_name() { $test_name }
 sub _parse {
     my( @attributes ) = @_;
 
-    return map  { m/^(\w+)\((\w+)\)/ or die $_;
+    return map  { m/^(\w+)\(\s*(\w+)\s*\)/ or die $_;
                   [ lc( $1 ), $2 ]
                   }
                 @attributes;
 }
+
+=head2 register
+
+    __PACKAGE__->register;
+
+This method must be called by every C<Test::DataDriven::Plugin>
+subclass in order to register the section handlers with
+C<Test::DataDriven>.
+
+=cut
 
 sub register {
     my( $self, $pluggable ) = @_;
@@ -83,11 +101,7 @@ sub _dispatch {
                   && exists $dispatch{$class}{$act}{$section};
 
     local $Test::Builder::Level = 1;
-    local $test_name = join ' - ',
-                            ( $block->name ? $block->name : () ),
-                            $act,
-                            ( $section     ? $section     : () ),
-                            ;
+    local $test_name = join ' - ', $block->name, $act, $section;
 
     my $run_one = 0;
     foreach my $sub ( @{$dispatch{$class}{$act}{$section}} ) {
@@ -106,12 +120,12 @@ sub endc {
     my( $self, $block, $section, @v ) = @_;
 
     _dispatch( 'endc', @_ );
-    _serback( @_ );
+    _serialize_back( @_ );
 }
 
 my %started;
 
-sub _serback {
+sub _serialize_back {
     my( $self, $block, $section, @v ) = @_;
     my $create_fh = Test::DataDriven->create_fh;
 
