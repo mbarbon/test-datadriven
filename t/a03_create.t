@@ -30,8 +30,8 @@ t/dummy/file2
 --- mkpath lines chomp
 t/dummy/dir
 --- created lines chomp
-file2
 dir/
+file2
 EOT
 
 exit 0;
