@@ -66,6 +66,7 @@ sub register {
         }
     }
 
+    $pluggable ||= 'Test::DataDriven';
     foreach my $key ( keys %keys ) {
         $pluggable->register( plugin => $self,
                               tag    => $key,

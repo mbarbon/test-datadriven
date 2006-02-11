@@ -14,7 +14,7 @@ BEGIN {
     mkpath( 't/dummy' );
 }
 
-__PACKAGE__->register( 'Test::DataDriven' );
+__PACKAGE__->register;
 
 sub run_mkpath : Run(mkpath) {
     my( $block, $section, @v ) = @_;
