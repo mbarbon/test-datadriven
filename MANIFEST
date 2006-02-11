@@ -1,0 +1,11 @@
+Build.PL
+lib/Test/DataDriven.pm
+lib/Test/DataDriven/Plugin.pm
+MANIFEST
+t/001_load.t
+t/a01_run.t
+t/a02_prepost.t
+t/a03_create.t
+t/lib/Dummy.pm
+t/lib/DummyT.pm
+META.yml
