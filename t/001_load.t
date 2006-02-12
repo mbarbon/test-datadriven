@@ -2,11 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More ();
+use Test::More tests => 2;
 
-require Test::DataDriven;
-require Test::DataDriven::Plugin;
-
-Test::More::plan( tests => 1 );
-Test::More::isnt( "I hate", "Side effects",
-    "You are in a twisty maze of subroutine redefinitions, all alike" );
+require_ok( 'Test::DataDriven' );
+require_ok( 'Test::DataDriven::Plugin' );
