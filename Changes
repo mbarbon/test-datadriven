@@ -4,6 +4,8 @@ Revision history for Perl module Test::DataDriven.
     - Fixed registering plugins by regular expression.
     - Added stop_run method to stop tests.
     - Default to 'Test::DataDriven' in Test::DataDriven::Plugin::register.
+    - Allow Test::DataDriven to be require()d by
+      ExtUtils::MakeMaker/Module::Build when checking prerequisites.
 
 0.01  Thu Feb 09 21:38:44 CET 2006
     - First public release.
