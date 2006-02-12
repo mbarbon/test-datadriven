@@ -73,12 +73,27 @@ effects of the "run" phase.
 use strict;
 use warnings;
 
-use Test::Base -base, '!run';
+require Test::Base; # see import() below for why require() and not use()
 use Fatal qw(open close);
 
 our $VERSION = '0.02';
 
 my( %tags, @tags_re, $stop_run );
+
+# we jump through there hoops beacuse when Test::Base::import is called
+# and no test are run, Test::Base tries to run tests in its end block
+# this breaks when ExtUtils::MakeMaker/Module::Build require()
+# Test::DataDriven that use()s Test::Base
+my $first_time = 1;
+sub import_tb {
+    Test::Base->import( '-base', '!run' ) if $first_time;
+    $first_time = 0;
+}
+
+sub import {
+    import_tb();
+    goto &Test::Base::import;
+}
 
 =head1 METHODS
 
@@ -104,6 +119,8 @@ C<$plugin> can be either a class or object reference.
 =cut
 
 sub register {
+    import_tb();
+
     my( $class, %args ) = @_;
     my( $plugin, $tag, $tag_re ) = @args{qw(plugin tag tag_re)};
 
@@ -160,18 +177,20 @@ sub create {
 sub create_fh { $create_fh }
 
 sub run {
+    import_tb();
+
     my( $self ) = @_;
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
     $stop_run = 0;
-    filters_delay;
+    filters_delay();
 
     my $end = $create ? 'endc' : 'end';
     if( $create ) {
         open $create_fh, '>', $create;
     }
-    for my $block ( blocks ) {
+    for my $block ( blocks() ) {
         last if $stop_run;
 
         $block->run_filters;
