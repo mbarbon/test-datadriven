@@ -13,6 +13,7 @@ my $builder = Module::Build->new
                         'Test::Differences' => 0,
                         'File::Slurp'       => 0,
                         },
+    create_makefile_pl => 'passthrough',
     );
 $builder->add_to_cleanup( 't/dummy', '*.data', 't/*.data' );
 $builder->create_build_script;

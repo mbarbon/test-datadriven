@@ -64,4 +64,34 @@ sub post_createdc : Endc(created) {
     $block->original_values->{$section} = join "\n", @final, '';
 }
 
+# Test::DataDriven is not made for this; but this is just a test...
+
+sub my_filter : Filter(my_filter) {
+    return map { $_ . ' my_filter' } @_;
+}
+
+sub my_filter2 : Filter(my_filter2) {
+    return map { $_ . ' my_filter2' } @_;
+}
+
+my @data;
+
+sub data : Begin(data) {
+    my( $block, $section, @v ) = @_;
+
+    @data = @v;
+}
+
+sub dataf : Begin(dataf) : Filter(lines) : Filter(chomp) : Filter(my_filter) {
+    my( $block, $section, @v ) = @_;
+
+    @data = @v;
+}
+
+sub filtered : End(filtered) {
+    my( $block, $section, @v ) = @_;
+
+    eq_or_diff( \@data, \@v, test_name );
+}
+
 1;
