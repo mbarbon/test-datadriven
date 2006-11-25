@@ -30,7 +30,7 @@ sub MODIFY_CODE_ATTRIBUTES {
     my( @known, @unknown );
 
     foreach ( @attrs ) {
-        /^(?:Begin|Run|End|Endc)\s*(?:$|\()/ ?
+        /^(?:Begin|Run|End|Endc|Filter)\s*(?:$|\()/ ?
           push @known, $_ : push @unknown, $_;
     }
 
@@ -39,15 +39,16 @@ sub MODIFY_CODE_ATTRIBUTES {
     return @unknown;
 }
 
-=pod
+our $test_name;
 
-sub FETCH_CODE_ATTRIBUTES {
-    return @{$attributes{ref( $_[0] ) || $_[0]}{$_[1]}[1] || []};
-}
+=head2 test_name
+
+  my $test_name = test_name();
+
+This function is exported by default. The test name is
+"$block - $action - $section".b
 
 =cut
-
-our $test_name;
 
 sub test_name() { $test_name }
 
@@ -70,6 +71,34 @@ C<Test::DataDriven>.
 
 =cut
 
+sub _apply_filter {
+    my( $self, $filter, @value ) = @_;
+    local $_;
+    # cut'n'pasted from Test::Base (this sucks)
+    $Test::Base::Filter::arguments =
+      $filter =~ s/=(.*)$// ? $1 : undef;
+    my $function = "main::$filter";
+    no strict 'refs';
+    if (defined &$function) {
+        $_ = join '', @value;
+        @value = &$function(@value);
+        if (not(@value) or
+            @value == 1 and $value[0] =~ /\A(\d+|)\z/
+           ) {
+            @value = ($_);
+        }
+    }
+    else {
+        my $filter_object = $self->blocks_object->filter_class->new;
+        die "Can't find a function or method for '$filter' filter\n"
+          unless $filter_object->can($filter);
+        $filter_object->current_block($self);
+        @value = $filter_object->$filter(@value);
+    }
+
+    return @value;
+}
+
 sub register {
     my( $self, $pluggable ) = @_;
     my $class = ref( $self ) || $self;
@@ -78,7 +107,24 @@ sub register {
 
     foreach my $attr ( @attributes ) {
         my( $sub, $attrs ) = @$attr;
-        foreach my $h ( _parse @$attrs ) {
+        my @parsed = _parse @$attrs;
+        # filter subroutines
+        if( @parsed == 1 && $parsed[0][0] eq 'filter' ) {
+            no strict 'refs';
+            *{'main::' . $parsed[0][1]} = $sub;
+            next;
+        }
+        # handle per-subroutine filters
+        foreach my $h ( grep $_->[0] eq 'filter', reverse @parsed ) {
+            my( $oldsub, $filter ) = ( $sub, $h->[1] );
+            $sub = sub {
+                my( $block, $section, @a ) = @_;
+                @a = _apply_filter( $block, $filter, @a );
+                &$oldsub( $block, $section, @a );
+            };
+        }
+        # handle begin/run/end
+        foreach my $h ( grep $_->[0] ne 'filter', @parsed ) {
             $keys{$h->[1]} = 1;
             push @{$dispatch{$class}{$h->[0]}{$h->[1]}}, $sub;
         }
@@ -112,6 +158,14 @@ sub _dispatch {
     return $run_one;
 }
 
+=head2 begin, run, end
+
+Dispatch to the subroutines registered with attributes
+C<Begin()>, C<Run()>, C<End()>, passing as parameters
+the block object, section name and the section data.
+
+=cut
+
 sub begin { _dispatch( 'begin', @_ ); }
 sub run { _dispatch( 'run', @_ ); }
 sub end { _dispatch( 'end', @_ ); }
@@ -127,7 +181,7 @@ my %started;
 
 sub _serialize_back {
     my( $self, $block, $section, @v ) = @_;
-    my $create_fh = Test::DataDriven->create_fh;
+    my $create_fh = Test::DataDriven->_create_fh;
 
     print $create_fh "=== ", $block->name, "\n" unless $started{$block};
     if( defined $block->description && $block->description ne $block->name ) {

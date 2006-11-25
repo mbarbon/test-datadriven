@@ -76,7 +76,7 @@ use warnings;
 require Test::Base; # see import() below for why require() and not use()
 use Fatal qw(open close);
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 my( %tags, @tags_re, $stop_run );
 
@@ -85,13 +85,13 @@ my( %tags, @tags_re, $stop_run );
 # this breaks when ExtUtils::MakeMaker/Module::Build require()
 # Test::DataDriven that use()s Test::Base
 my $first_time = 1;
-sub import_tb {
+sub _import_tb {
     Test::Base->import( '-base', '!run' ) if $first_time;
     $first_time = 0;
 }
 
 sub import {
-    import_tb();
+    _import_tb();
     goto &Test::Base::import;
 }
 
@@ -119,7 +119,7 @@ C<$plugin> can be either a class or object reference.
 =cut
 
 sub register {
-    import_tb();
+    _import_tb();
 
     my( $class, %args ) = @_;
     my( $plugin, $tag, $tag_re ) = @args{qw(plugin tag tag_re)};
@@ -168,16 +168,15 @@ sub _run_plugins {
 my $create;
 my $create_fh;
 
-# do not use this
 sub create {
     $create = $_[1] if @_ > 1;
     return $create;
 }
 
-sub create_fh { $create_fh }
+sub _create_fh { $create_fh }
 
 sub run {
-    import_tb();
+    _import_tb();
 
     my( $self ) = @_;
 
